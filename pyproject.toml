@@ -1,7 +1,10 @@
 [project]
 name = "sunshine-mcp"
 version = "0.1.0"
-description = "Add your description here"
+description = "Find locations with good weather/sunshine within a reasonable distance"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "httpx",
+    "click",
+]
