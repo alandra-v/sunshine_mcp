@@ -1,7 +1,7 @@
 import subprocess
 import json
 import asyncio
-from typing import Tuple, Optional, List, Dict, Any
+from typing import Tuple, List, Dict, Any
 from dataclasses import dataclass
 import math
 import click
@@ -26,34 +26,38 @@ class Location:
 
 
 class SunshineFinder:
+    # api request and headers
     def __init__(self):
         self.weather_api_url = "https://api.met.no/weatherapi/locationforecast/2.0/compact"
-        self.headers = {
-            "User-Agent": "SunshineFinder/1.0 (https://github.com/sunshine-finder)"
-        }
+
     
-    def get_current_location(self) -> Tuple[float, float]:
+    # get location with CoreLocationCLI
+    def get_current_location(self) -> Tuple[float, float]: #lat, lon
         """Get current location using CoreLocationCLI"""
         try:
             result = subprocess.run(
+                # command to get location
                 ["CoreLocationCLI", "-once", "-format", "%latitude %longitude"],
+                # return output
                 capture_output=True,
+                # right click on run go to definition
                 text=True,
                 check=True
             )
             lat_str, lon_str = result.stdout.strip().split()
             return float(lat_str), float(lon_str)
+            # ausbaufähig
         except (subprocess.CalledProcessError, ValueError, FileNotFoundError) as e:
             raise Exception(f"Failed to get current location: {e}")
     
     async def get_weather_data(self, lat: float, lon: float) -> WeatherData:
+        # this is a doc string
         """Fetch weather data from Met.no API"""
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(
                     self.weather_api_url,
                     params={"lat": lat, "lon": lon},
-                    headers=self.headers
                 )
                 response.raise_for_status()
                 data = response.json()
@@ -161,7 +165,7 @@ class SunshineFinder:
             
             return {
                 "current_location": {"lat": current_lat, "lon": current_lon},
-                "best_locations": results[:5],  # Top 5 results
+                "best_locations": results[:5], # Top 5 results
                 "total_checked": len(results)
             }
             
@@ -169,14 +173,19 @@ class SunshineFinder:
             raise Exception(f"Error in find_sunshine: {e}")
 
 
+# maybe put cli logic somewhere else
 @click.command()
 @click.option("--radius", default=100, help="Search radius in kilometers")
+# good to have json output for composibility
 @click.option("--json-output", is_flag=True, help="Output results as JSON")
+# add more commands like above if wanted (also add in main())
+
 def main(radius: int, json_output: bool):
     """Find locations with good weather/sunshine within a specified radius."""
     finder = SunshineFinder()
     
     try:
+        # to "await" running in asyncio
         results = asyncio.run(finder.find_sunshine(radius))
         
         if json_output:
@@ -208,6 +217,6 @@ def main(radius: int, json_output: bool):
         click.echo(f"Error: {e}", err=True)
         exit(1)
 
-
+# if you want to run this from the terminal u need this
 if __name__ == "__main__":
     main()
