@@ -7,4 +7,12 @@ requires-python = ">=3.13"
 dependencies = [
     "httpx",
     "click",
+    "fastmcp",
 ]
+
+[project.scripts]
+sunshine-cli = "src.tools.cli:main"
+sunshine-server = "src.server.mcp_server:main"
+
+[project.entry-points."fastmcp.servers"]
+sunshine = "src.server.mcp_server:mcp"
